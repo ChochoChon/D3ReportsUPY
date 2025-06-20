@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>APIs Gratuitas de Streaming - Ejemplos</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+        
+        .api-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .api-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-left: 4px solid #667eea;
+            transition: transform 0.3s ease;
+        }
+        
+        .api-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .api-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .api-description {
+            color: #666;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+        
+        .code-example {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        
+        .test-button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .test-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .test-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .output {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        
+        .category {
+            color: #667eea;
+            font-weight: bold;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+        
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 20px 0;
+            color: #856404;
+        }
+        
+        .live-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background: #4CAF50;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌊 APIs Gratuitas de Streaming de Datos</h1>
+        
+        <div class="warning">
+            <strong>⚠️ Nota importante:</strong> Estas APIs requieren registrarse para obtener claves API gratuitas. Los ejemplos muestran la estructura del código, pero necesitarás tu propia API key para probarlas.
+        </div>
+        
+        <div class="api-grid">
+            <!-- Coinbase -->
+            <div class="api-card">
+                <div class="category">Criptomonedas</div>
+                <div class="api-title">
+                    <span class="live-indicator"></span>
+                    Coinbase Pro WebSocket
+                </div>
+                <div class="api-description">
+                    Stream en tiempo real de precios de Bitcoin, Ethereum y otras criptomonedas. Alta frecuencia (cientos de eventos por segundo).
+                </div>
+                <div class="code-example">// Conexión WebSocket a Coinbase
+const socket = new WebSocket('wss://ws-feed.pro.coinbase.com');
+
+socket.onopen = function() {
+    const subscribe = {
+        "type": "subscribe",
+        "channels": ["ticker"],
+        "product_ids": ["BTC-USD", "ETH-USD"]
+    };
+    socket.send(JSON.stringify(subscribe));
+};
+
+socket.onmessage = function(event) {
+    const data = JSON.parse(event.data);
+    if (data.type === 'ticker') {
+        updateChart({
+            time: new Date(),
+            price: parseFloat(data.price),
+            symbol: data.product_id
+        });
+    }
+};</div>
+                <button class="test-button" onclick="testCoinbase()">Probar Conexión</button>
+                <div id="coinbase-output" class="output" style="display:none;"></div>
+            </div>
+
+            <!-- OpenWeatherMap -->
+            <div class="api-card">
+                <div class="category">Clima</div>
+                <div class="api-title">
+                    <span class="live-indicator"></span>
+                    OpenWeatherMap API
+                </div>
+                <div class="api-description">
+                    Datos meteorológicos actuales y pronósticos. Gratuito hasta 1000 llamadas/día.
+                </div>
+                <div class="code-example">// Polling cada 30 segundos
+const API_KEY = 'tu-api-key';
+const city = 'Mexico City';
+
+setInterval(async () => {
+    try {
+        const response = await fetch(
+            `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`
+        );
+        const data = await response.json();
+        
+        updateChart({
+            time: new Date(),
+            temperature: data.main.temp,
+            humidity: data.main.humidity,
+            pressure: data.main.pressure
+        });
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}, 30000);</div>
+                <button class="test-button" onclick="testWeather()">Simular Datos</button>
+                <div id="weather-output" class="output" style="display:none;"></div>
+            </div>
+
+            <!-- USGS Earthquake -->
+            <div class="api-card">
+                <div class="category">Sismología</div>
+                <div class="api-title">
+                    <span class="live-indicator"></span>
+                    USGS Earthquake Feed
+                </div>
+                <div class="api-description">
+                    Datos sísmicos globales en tiempo real. Feed GeoJSON actualizado cada minuto.
+                </div>
+                <div class="code-example">// Polling de earthquakes cada minuto
+const USGS_URL = 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_hour.geojson';
+
+setInterval(async () => {
+    try {
+        const response = await fetch(USGS_URL);
+        const data = await response.json();
+        
+        data.features.forEach(earthquake => {
+            const props = earthquake.properties;
+            updateChart({
+                time: new Date(props.time),
+                magnitude: props.mag,
+                place: props.place,
+                coordinates: earthquake.geometry.coordinates
+            });
+        });
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}, 60000);</div>
+                <button class="test-button" onclick="testEarthquake()">Simular Sismos</button>
+                <div id="earthquake-output" class="output" style="display:none;"></div>
+            </div>
+
+            <!-- Wikimedia -->
+            <div class="api-card">
+                <div class="category">Datos Sociales</div>
+                <div class="api-title">
+                    <span class="live-indicator"></span>
+                    Wikimedia Event Stream
+                </div>
+                <div class="api-description">
+                    Stream de cambios en tiempo real en Wikipedia y otros proyectos de Wikimedia.
+                </div>
+                <div class="code-example">// Server-Sent Events de Wikimedia
+const eventSource = new EventSource(
+    'https://stream.wikimedia.org/v2/stream/recentchange'
+);
+
+eventSource.onmessage = function(event) {
+    try {
+        const change = JSON.parse(event.data);
+        
+        if (change.type === 'edit') {
+            updateChart({
+                time: new Date(change.timestamp * 1000),
+                wiki: change.wiki,
+                title: change.title,
+                user: change.user,
+                bytes: change.length.new - change.length.old
+            });
+        }
+    } catch (error) {
+        console.error('Error parsing:', error);
+    }
+};</div>
+                <button class="test-button" onclick="testWikimedia()">Simular Ediciones</button>
+                <div id="wikimedia-output" class="output" style="display:none;"></div>
+            </div>
+
+            <!-- Alpha Vantage -->
+            <div class="api-card">
+                <div class="category">Finanzas</div>
+                <div class="api-title">
+                    <span class="live-indicator"></span>
+                    Alpha Vantage Stocks
+                </div>
+                <div class="api-description">
+                    Datos bursátiles en tiempo real. 5 llamadas por minuto gratis, 500 por día.
+                </div>
+                <div class="code-example">// Datos de acciones cada 5 minutos
+const AV_API_KEY = 'tu-api-key';
+const symbol = 'AAPL';
+
+setInterval(async () => {
+    try {
+        const response = await fetch(
+            `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${AV_API_KEY}`
+        );
+        const data = await response.json();
+        const quote = data['Global Quote'];
+        
+        updateChart({
+            time: new Date(),
+            symbol: symbol,
+            price: parseFloat(quote['05. price']),
+            change: parseFloat(quote['09. change']),
+            volume: parseInt(quote['06. volume'])
+        });
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}, 300000); // 5 minutos</div>
+                <button class="test-button" onclick="testStocks()">Simular Stocks</button>
+                <div id="stocks-output" class="output" style="display:none;"></div>
+            </div>
+
+            <!-- Custom Mock Stream -->
+            <div class="api-card">
+                <div class="category">Demo</div>
+                <div class="api-title">
+                    <span class="live-indicator"></span>
+                    Stream de Prueba
+                </div>
+                <div class="api-description">
+                    Generador de datos sintéticos para probar tu visualización sin APIs externas.
+                </div>
+                <div class="code-example">// Generador de datos sintéticos
+function createMockStream() {
+    const streams = ['sensor1', 'sensor2', 'sensor3'];
+    
+    setInterval(() => {
+        streams.forEach(stream => {
+            const dataPoint = {
+                time: new Date(),
+                stream: stream,
+                value: Math.random() * 100 + 
+                       Math.sin(Date.now() / 10000) * 20,
+                status: Math.random() > 0.95 ? 'alert' : 'normal'
+            };
+            
+            updateChart(dataPoint);
+        });
+    }, 1000);
+}</div>
+                <button class="test-button" onclick="startMockStream()">Iniciar Stream Demo</button>
+                <div id="mock-output" class="output" style="display:none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let mockInterval;
+        
+        function testCoinbase() {
+            const output = document.getElementById('coinbase-output');
+            output.style.display = 'block';
+            output.innerHTML = 'Simulando datos de Coinbase...\n';
+            
+            let count = 0;
+            const interval = setInterval(() => {
+                if (count >= 5) {
+                    clearInterval(interval);
+                    output.innerHTML += '\n✅ Demo completado. Usa tu API key para datos reales.';
+                    return;
+                }
+                
+                const mockData = {
+                    type: 'ticker',
+                    product_id: 'BTC-USD',
+                    price: (45000 + Math.random() * 5000).toFixed(2),
+                    time: new Date().toISOString()
+                };
+                
+                output.innerHTML += `${JSON.stringify(mockData, null, 2)}\n`;
+                output.scrollTop = output.scrollHeight;
+                count++;
+            }, 1000);
+        }
+        
+        function testWeather() {
+            const output = document.getElementById('weather-output');
+            output.style.display = 'block';
+            output.innerHTML = 'Simulando datos meteorológicos...\n';
+            
+            const mockData = {
+                main: {
+                    temp: (20 + Math.random() * 15).toFixed(1),
+                    humidity: Math.floor(40 + Math.random() * 40),
+                    pressure: Math.floor(1000 + Math.random() * 50)
+                },
+                weather: [{description: 'parcialmente nublado'}],
+                name: 'Ciudad de México'
+            };
+            
+            output.innerHTML += `${JSON.stringify(mockData, null, 2)}\n`;
+            output.innerHTML += '\n✅ Registra en OpenWeatherMap para datos reales.';
+        }
+        
+        function testEarthquake() {
+            const output = document.getElementById('earthquake-output');
+            output.style.display = 'block';
+            output.innerHTML = 'Simulando datos sísmicos...\n';
+            
+            const mockData = {
+                type: 'Feature',
+                properties: {
+                    mag: (2 + Math.random() * 4).toFixed(1),
+                    place: '15km SE of Guadalajara, Mexico',
+                    time: Date.now(),
+                    type: 'earthquake'
+                },
+                geometry: {
+                    coordinates: [-103.3496, 20.6597, 10]
+                }
+            };
+            
+            output.innerHTML += `${JSON.stringify(mockData, null, 2)}\n`;
+            output.innerHTML += '\n✅ Los datos reales están disponibles sin API key.';
+        }
+        
+        function testWikimedia() {
+            const output = document.getElementById('wikimedia-output');
+            output.style.display = 'block';
+            output.innerHTML = 'Simulando ediciones de Wikipedia...\n';
+            
+            let count = 0;
+            const interval = setInterval(() => {
+                if (count >= 3) {
+                    clearInterval(interval);
+                    output.innerHTML += '\n✅ Stream real disponible sin API key.';
+                    return;
+                }
+                
+                const mockData = {
+                    type: 'edit',
+                    wiki: 'eswiki',
+                    title: 'Artículo de ejemplo',
+                    user: 'Usuario' + Math.floor(Math.random() * 1000),
+                    timestamp: Math.floor(Date.now() / 1000),
+                    length: {
+                        old: 1000,
+                        new: 1000 + Math.floor(Math.random() * 200 - 100)
+                    }
+                };
+                
+                output.innerHTML += `${JSON.stringify(mockData, null, 2)}\n`;
+                output.scrollTop = output.scrollHeight;
+                count++;
+            }, 2000);
+        }
+        
+        function testStocks() {
+            const output = document.getElementById('stocks-output');
+            output.style.display = 'block';
+            output.innerHTML = 'Simulando datos bursátiles...\n';
+            
+            const mockData = {
+                'Global Quote': {
+                    '01. symbol': 'AAPL',
+                    '05. price': (150 + Math.random() * 20).toFixed(2),
+                    '09. change': (Math.random() * 4 - 2).toFixed(2),
+                    '06. volume': Math.floor(50000000 + Math.random() * 20000000)
+                }
+            };
+            
+            output.innerHTML += `${JSON.stringify(mockData, null, 2)}\n`;
+            output.innerHTML += '\n✅ Registra en Alpha Vantage para datos reales.';
+        }
+        
+        function startMockStream() {
+            const output = document.getElementById('mock-output');
+            output.style.display = 'block';
+            output.innerHTML = 'Stream de prueba iniciado...\n';
+            
+            if (mockInterval) clearInterval(mockInterval);
+            
+            let count = 0;
+            mockInterval = setInterval(() => {
+                if (count >= 10) {
+                    clearInterval(mockInterval);
+                    output.innerHTML += '\n✅ Demo completado.';
+                    return;
+                }
+                
+                const mockData = {
+                    time: new Date().toISOString(),
+                    sensor: 'sensor' + (Math.floor(Math.random() * 3) + 1),
+                    value: (50 + Math.random() * 50).toFixed(2),
+                    status: Math.random() > 0.9 ? 'alert' : 'normal'
+                };
+                
+                output.innerHTML += `${JSON.stringify(mockData, null, 2)}\n`;
+                output.scrollTop = output.scrollHeight;
+                count++;
+            }, 1500);
+        }
+    </script>
+</body>
+</html>
